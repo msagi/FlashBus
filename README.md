@@ -55,7 +55,7 @@ android.applicationVariants.all { variant ->
     variant.javaCompile.doFirst {
         flashBusOutput.mkdirs();
     }
-    variant.javaCompile.options.compilerArgs += [ "-s", flashBusOutput.getAbsolutePath() ]
+    variant.javaCompile.options.compilerArgs += [ "-s", flashBusOutput.getAbsolutePath(), "-Apackage=" + variant.applicationId ]
 }
 ```
 
@@ -96,7 +96,7 @@ android.applicationVariants.all { variant ->
     variant.javaCompile.doFirst {
         flashBusOutput.mkdirs();
     }
-    variant.javaCompile.options.compilerArgs += [ "-s", flashBusOutput.getAbsolutePath() ]
+    variant.javaCompile.options.compilerArgs += [ "-s", flashBusOutput.getAbsolutePath(), "-Apackage=" + variant.applicationId ]
 }
 ```
 

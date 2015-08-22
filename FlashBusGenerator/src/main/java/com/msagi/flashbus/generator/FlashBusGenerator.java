@@ -55,19 +55,38 @@ public class FlashBusGenerator extends AbstractProcessor {
     private static final String LOG_TAG = "FlashBusGenerator";
 
     /**
-     * The package name of the custom generated event bus class.
+     * The default package name of the custom generated event bus class.
      */
-    private static final java.lang.String EVENT_BUS_PACKAGE = "com.msagi.flashbus";
+    private static final java.lang.String DEFAULT_EVENT_BUS_PACKAGE = "com.msagi.flashbus";
 
     /**
-     * The simple class name of the custom generated event bus class.
+     * The (simple) class name of the custom generated event bus class.
      */
-    private static final java.lang.String EVENT_BUS_CLASS = "EventBus";
+    private static final java.lang.String EVENT_BUS_CLASS = "FlashBus";
 
-    private static final String EVENT_BUS_CLASS_TEMPLATE = "/com/msagi/flashbus/EventBus.java.template";
+    /**
+     * The event bus class template file resource path.
+     */
+    private static final String EVENT_BUS_CLASS_TEMPLATE = "/com/msagi/flashbus/FlashBus.java.template";
 
+    /**
+     * The compiler parameter for event class package.
+     */
+    private static final String PARAMETER_PACKAGE = "package";
+
+    /**
+     * The list of subscribers to build the event bus for.
+     */
     private final List<Subscriber> subscriberList = new ArrayList<>();
 
+    /**
+     * The event bus package (configurable with compiler parameter -Apackage='packagename')
+     */
+    private String eventBusPackage = DEFAULT_EVENT_BUS_PACKAGE;
+
+    /**
+     * The index of build round.
+     */
     private int roundIndex;
 
     /**
@@ -116,8 +135,14 @@ public class FlashBusGenerator extends AbstractProcessor {
         final Map<String, String> options = processingEnv.getOptions();
         final Set<String> optionKeys = options.keySet();
         for (final String optionKey : optionKeys) {
-            log("init: option: key: " + optionKey + ", value: " + options.get(optionKey));
+            final String optionValue = options.get(optionKey);
+            if (optionKey.equalsIgnoreCase(PARAMETER_PACKAGE)) {
+                eventBusPackage = optionValue;
+            } else {
+                log("init: unknown option: key: " + optionKey + ", value: " + optionValue);
+            }
         }
+        log("init: event bus package: " + eventBusPackage);
 
         log("init: done");
     }
@@ -192,13 +217,14 @@ public class FlashBusGenerator extends AbstractProcessor {
      * Generate custom event bus class.
      */
     private void generateEventBusClass() {
-        final String eventBusClassName = EVENT_BUS_PACKAGE + "." + EVENT_BUS_CLASS;
+        final String eventBusClassName = eventBusPackage + "." + EVENT_BUS_CLASS;
         log("generateEventBusClass: start (class: " + eventBusClassName + ")");
 
         PrintWriter classWriter = null;
         JavaFileObject eventBusClass = null;
         try {
-            final String eventBusCode = new EventBusBuilder()
+            final String eventBusCode = new FlashBusBuilder()
+                    .withPackage(eventBusPackage)
                     .withSubscribers(subscriberList)
                     .withTemplate(loadTemplate())
                     .build();
