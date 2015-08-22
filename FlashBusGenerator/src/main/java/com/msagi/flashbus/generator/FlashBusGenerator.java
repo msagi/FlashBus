@@ -73,33 +73,31 @@ public class FlashBusGenerator extends AbstractProcessor {
     /**
      * Print log message to diagnostic log.
      *
-     * @param messager The messager to print to.
-     * @param message  The message to print.
+     * @param message The message to print.
      */
-    private void log(final Messager messager, final String message) {
-        log(messager, Diagnostic.Kind.NOTE, message, /* throwable */ null);
+    private void log(final String message) {
+        log(Diagnostic.Kind.NOTE, message, /* throwable */ null);
     }
 
     /**
      * Print error message to diagnostic log.
      *
-     * @param messager  The messager to print to.
      * @param message   The message to print.
      * @param throwable The error to print.
      */
-    private void logError(final Messager messager, final String message, final Throwable throwable) {
-        log(messager, Diagnostic.Kind.ERROR, message, throwable);
+    private void logError(final String message, final Throwable throwable) {
+        log(Diagnostic.Kind.ERROR, message, throwable);
     }
 
     /**
      * Print message with optional exception to diagnostic log.
      *
-     * @param messager    The messager to print to.
      * @param messageKind The kind of the message (note, error, etc.)
      * @param message     The message to print.
      * @param throwable   The error to print (optional).
      */
-    private void log(final Messager messager, final Diagnostic.Kind messageKind, final String message, final Throwable throwable) {
+    private void log(final Diagnostic.Kind messageKind, final String message, final Throwable throwable) {
+        final Messager messager = processingEnv.getMessager();
         final StringWriter messageWriter = new StringWriter();
         messageWriter.append(LOG_TAG).append(": ").append(message);
         if (throwable != null) {
@@ -113,23 +111,21 @@ public class FlashBusGenerator extends AbstractProcessor {
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
 
-        final Messager messager = processingEnv.getMessager();
-        log(messager, "init: start");
+        log("init: start");
 
         final Map<String, String> options = processingEnv.getOptions();
         final Set<String> optionKeys = options.keySet();
         for (final String optionKey : optionKeys) {
-            log(messager, "init: option: key: " + optionKey + ", value: " + options.get(optionKey));
+            log("init: option: key: " + optionKey + ", value: " + options.get(optionKey));
         }
 
-        log(messager, "init: done");
+        log("init: done");
     }
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
 
-        final Messager messager = processingEnv.getMessager();
-        log(messager, "generate: start (round: " + roundIndex + ")");
+        log("generate: start (round: " + roundIndex + ")");
 
         try {
             final String subscribeAnnotationClass = Subscribe.class.getName();
@@ -140,25 +136,25 @@ public class FlashBusGenerator extends AbstractProcessor {
 
                         try {
                             final Subscriber subscriber = Subscriber.fromElement(element);
-                            log(messager, "generate: detected: " + subscriber.toString());
+                            log("generate: detected: " + subscriber.toString());
                             subscriberList.add(subscriber);
                         } catch (RuntimeException rte) {
-                            messager.printMessage(Diagnostic.Kind.ERROR, rte.getMessage());
+                            logError("generate: error processing subscriber", rte);
                         }
                     }
                 } else {
-                    logError(messager, "generate: annotation not supported: " + annotationClass, /* throwable */ null);
+                    logError("generate: annotation not supported: " + annotationClass, /* throwable */ null);
                 }
             }
 
             if (roundIndex == 0) {
-                generateEventBusClass(messager);
+                generateEventBusClass();
             }
         } catch (RuntimeException rte) {
-            logError(messager, "generate: runtime error", rte);
+            logError("generate: runtime error", rte);
         }
 
-        log(messager, "generate: done (round: " + roundIndex + ")");
+        log("generate: done (round: " + roundIndex + ")");
 
         roundIndex++;
         return true;
@@ -167,17 +163,16 @@ public class FlashBusGenerator extends AbstractProcessor {
     /**
      * Load the event bus java class template content.
      *
-     * @param messager The messager to print to.
      * @return The template content.
      * @throws Exception If error happens during loading.
      */
-    private String loadTemplate(final Messager messager) throws Exception {
+    private String loadTemplate() throws Exception {
 
-        log(messager, "loadTemplate: start (template: " + EVENT_BUS_CLASS_TEMPLATE + ")");
+        log("loadTemplate: start (template: " + EVENT_BUS_CLASS_TEMPLATE + ")");
 
         //this is a workaround of a bug (the URLConnection is caching the jar file; the other solution would be to load the Event Bus template file manually)
         new URL("http://localhost/").openConnection().setDefaultUseCaches(false);
-        log(messager, "loadTemplate: java.net.URLConnection cache bug workaround applied");
+        log("loadTemplate: java.net.URLConnection cache bug workaround applied");
 
         final InputStream inputStream = getClass().getResourceAsStream(EVENT_BUS_CLASS_TEMPLATE);
         final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -188,26 +183,24 @@ public class FlashBusGenerator extends AbstractProcessor {
         }
         inputStream.close();
 
-        log(messager, "loadTemplate: done");
+        log("loadTemplate: done");
 
         return builder.toString();
     }
 
     /**
      * Generate custom event bus class.
-     *
-     * @param messager The messager to send messages to.
      */
-    private void generateEventBusClass(final Messager messager) {
+    private void generateEventBusClass() {
         final String eventBusClassName = EVENT_BUS_PACKAGE + "." + EVENT_BUS_CLASS;
-        log(messager, "generateEventBusClass: start (class: " + eventBusClassName + ")");
+        log("generateEventBusClass: start (class: " + eventBusClassName + ")");
 
         PrintWriter classWriter = null;
         JavaFileObject eventBusClass = null;
         try {
             final String eventBusCode = new EventBusBuilder()
                     .withSubscribers(subscriberList)
-                    .withTemplate(loadTemplate(messager))
+                    .withTemplate(loadTemplate())
                     .build();
 
             eventBusClass = processingEnv.getFiler().createSourceFile(eventBusClassName);
@@ -220,13 +213,13 @@ public class FlashBusGenerator extends AbstractProcessor {
             if (classWriter != null) {
                 try {
                     classWriter.close();
-                    log(messager, "generateEventBusClass: event bus class generated (class: " + eventBusClass.getName() + ")");
+                    log("generateEventBusClass: event bus class generated (class: " + eventBusClass.getName() + ")");
                 } catch (Exception ioe) {
-                    logError(messager, "generateEventBusClass: I/O error writing event bus class (class: " + eventBusClass.getName() + ")", ioe);
+                    logError("generateEventBusClass: I/O error writing event bus class (class: " + eventBusClass.getName() + ")", ioe);
                 }
             }
         }
 
-        log(messager, "generateEventBusClass: done");
+        log("generateEventBusClass: done");
     }
 }
