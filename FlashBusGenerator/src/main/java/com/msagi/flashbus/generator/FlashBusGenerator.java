@@ -15,6 +15,7 @@
  */
 package com.msagi.flashbus.generator;
 
+import com.msagi.flashbus.annotation.FlashBusConfiguration;
 import com.msagi.flashbus.annotation.Subscribe;
 
 import java.io.BufferedReader;
@@ -45,7 +46,10 @@ import javax.tools.JavaFileObject;
  *
  * @author msagi (miklos.sagi@gmail.com)
  */
-@SupportedAnnotationTypes("com.msagi.flashbus.annotation.Subscribe")
+@SupportedAnnotationTypes({
+        "com.msagi.flashbus.annotation.FlashBusConfiguration",
+        "com.msagi.flashbus.annotation.Subscribe"
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class FlashBusGenerator extends AbstractProcessor {
 
@@ -153,6 +157,17 @@ public class FlashBusGenerator extends AbstractProcessor {
         log("generate: start (round: " + roundIndex + ")");
 
         try {
+            final Set<? extends Element> annotatedElementsSet = roundEnv.getElementsAnnotatedWith(FlashBusConfiguration.class);
+            if (annotatedElementsSet.isEmpty()) {
+                log("generate: using default package: " + eventBusPackage);
+            } else if (annotatedElementsSet.size() == 1){
+                final Element[] annotatedElements = annotatedElementsSet.toArray(new Element[] {});
+                eventBusPackage = annotatedElements[0].getAnnotation(FlashBusConfiguration.class).packageName();
+                log("generate: using custom package: " + eventBusPackage);
+            } else {
+                logError("generate: multiple (" + annotatedElementsSet.size() + "x) FlashBus configuration annotations found: using default package", /* Throwable */ null);
+            }
+
             final String subscribeAnnotationClass = Subscribe.class.getName();
             for (final TypeElement annotation : annotations) {
                 final String annotationClass = annotation.toString();
@@ -167,8 +182,6 @@ public class FlashBusGenerator extends AbstractProcessor {
                             logError("generate: error processing subscriber", rte);
                         }
                     }
-                } else {
-                    logError("generate: annotation not supported: " + annotationClass, /* throwable */ null);
                 }
             }
 
