@@ -45,7 +45,9 @@ import javax.tools.JavaFileObject;
  *
  * @author msagi (miklos.sagi@gmail.com)
  */
-@SupportedAnnotationTypes("com.msagi.flashbus.annotation.Subscribe")
+@SupportedAnnotationTypes({
+        "com.msagi.flashbus.annotation.Subscribe"
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class FlashBusGenerator extends AbstractProcessor {
 
@@ -167,8 +169,6 @@ public class FlashBusGenerator extends AbstractProcessor {
                             logError("generate: error processing subscriber", rte);
                         }
                     }
-                } else {
-                    logError("generate: annotation not supported: " + annotationClass, /* throwable */ null);
                 }
             }
 
