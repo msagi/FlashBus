@@ -35,4 +35,10 @@ public @interface FlashBusConfiguration {
      * @return The FlashBus class package name.
      */
     String packageName() default "com.msagi.flashbus";
+
+    /**
+     * The Android BuildConfig.class
+     * @return The BuildConfig.class or null if not set.
+     */
+    Class<?> buildConfig() default Void.class;
 }

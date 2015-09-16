@@ -5,7 +5,7 @@ import com.msagi.flashbus.annotation.Subscribe;
 import com.msagi.flashbus.test.events.TestEvent;
 import com.msagi.flashbus.test.events.TestEventWithData;
 import com.msagi.flashbus.test.events.TestRuntimeExceptionEvent;
-import com.msagi.flashbus.test.FlashBus;
+import com.msagi.flashbus.FlashBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,19 +27,19 @@ public class UnitTestBridge {
 
     @Subscribe
     public void handleTestEventOnMainThread(final TestEvent event) {
-        System.out.println("FlashBusCustomTest: Event received on handleTestEventOnMainThread: " + event);
+        System.out.println("UnitTestBridge: Event received on handleTestEventOnMainThread: " + event);
         mReceivedTestEventsOnMainThread.add(event);
     }
 
     @Subscribe
     public void handleTestEventWithDataOnMainThread(final TestEventWithData event) {
-        System.out.println("FlashBusCustomTest: Event received on handleTestEventWithDataOnMainThread: " + event);
+        System.out.println("UnitTestBridge: Event received on handleTestEventWithDataOnMainThread: " + event);
         mReceivedTestEventsWithDataOnMainThread.add(event);
     }
 
     @Subscribe
     public void throwRuntimeExceptionOnMainThread(final TestRuntimeExceptionEvent event) {
-        System.out.println("FlashBusCustomTest: Event received on throwRuntimeExceptionOnMainThread: " + event);
+        System.out.println("UnitTestBridge: Event received on throwRuntimeExceptionOnMainThread: " + event);
         throw new RuntimeException("This is a test runtime exception when handling event " + event);
     }
 
@@ -49,10 +49,12 @@ public class UnitTestBridge {
 
     public void register() {
         mEventBus.register(this);
+        System.out.println("UnitTestBridge: registered on FlashBus: " + mEventBus);
     }
 
     public void unregister() {
         mEventBus.unregister(this);
+        System.out.println("UnitTestBridge: unregistered from FlashBus: " + mEventBus);
     }
 
     public int getReceivedTestEventsOnMainThreadListSize() {

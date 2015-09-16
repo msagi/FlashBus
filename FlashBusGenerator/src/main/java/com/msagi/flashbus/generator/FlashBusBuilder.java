@@ -53,6 +53,12 @@ public class FlashBusBuilder {
     private Hashtable<String, ArrayList<Subscriber>> subscribersByEventClass;
 
     /**
+     * The unique event classes in the subscriber list.
+     */
+    private List<String> eventClasses;
+
+
+    /**
      * The package name of the generated event bus class.
      */
     private String packageName;
@@ -115,11 +121,21 @@ public class FlashBusBuilder {
         subscribersBySubscriberClass = new Hashtable<>();
         subscribersByEventClass = new Hashtable<>();
 
+        int subscriberUid = 0;
+        eventClasses = new ArrayList<>();
+
         for (final Subscriber subscriber : subscriberList) {
+
+            subscriber.setUid(subscriberUid++);
 
             final String subscriberClass = subscriber.getSubscriberClass();
             final String eventClass = subscriber.getEventClass();
             final String method = subscriber.getMethod();
+
+            if (!eventClasses.contains(eventClass)) {
+                eventClasses.add(eventClass);
+            }
+            subscriber.setEventClassId(eventClasses.indexOf(eventClass));
 
             logBuilder
                     .append("Analyzing subscriber (subscriber: ").append(subscriberClass).append(" event:").append(eventClass).append(" method:").append(method)
@@ -270,7 +286,7 @@ public class FlashBusBuilder {
         final Enumeration<String> eventClasses = subscribersByEventClass.keys();
         while (eventClasses.hasMoreElements()) {
             final String eventClass = eventClasses.nextElement();
-            final int eventClassId = Subscriber.getEventClassIdByEventClass(eventClass);
+            final int eventClassId = this.eventClasses.indexOf(eventClass);
             final ArrayList<Subscriber> subscribers = subscribersByEventClass.get(eventClass);
 
             logBuilder

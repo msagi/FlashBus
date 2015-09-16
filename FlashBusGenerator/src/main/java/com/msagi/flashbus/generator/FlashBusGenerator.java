@@ -17,8 +17,11 @@ package com.msagi.flashbus.generator;
 
 import com.msagi.flashbus.annotation.FlashBusConfiguration;
 import com.msagi.flashbus.annotation.Subscribe;
+import com.msagi.flashbus.generator.dao.SubscriberDao;
+import com.msagi.flashbus.generator.dao.SubscriberDaoImpl;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -151,22 +154,43 @@ public class FlashBusGenerator extends AbstractProcessor {
         log("init: done");
     }
 
+    private static AndroidBuildConfig processConfiguration(final Set<? extends Element> annotatedConfigurationElementSet) {
+        if (annotatedConfigurationElementSet == null || annotatedConfigurationElementSet.isEmpty()) {
+            return null;
+        }
+
+        final Element[] configurationElements = annotatedConfigurationElementSet.toArray(new Element[]{});
+        final int numberOfConfigurations = configurationElements.length;
+        if (numberOfConfigurations > 1) {
+            final StringBuilder stringBuilder = new StringBuilder("multiple configurations are not allowed: (");
+            for (int elementIndex = 0; elementIndex < numberOfConfigurations; elementIndex++) {
+                final Element configurationElement = configurationElements[elementIndex];
+                if (elementIndex > 0) {
+                    stringBuilder.append(", ");
+                }
+                stringBuilder.append(configurationElement);
+            }
+            stringBuilder.append(")");
+            throw new RuntimeException("multiple (" + numberOfConfigurations + "x) FlashBus configuration annotations found: using default package", /* Throwable */
+                    null);
+        }
+
+        final Element configurationElement = configurationElements[0];
+        final FlashBusConfiguration flashBusConfiguration = configurationElement.getAnnotation(FlashBusConfiguration.class);
+        final Class buildConfigClass = flashBusConfiguration.buildConfig();
+        return AndroidBuildConfig.fromBuildConfig(buildConfigClass);
+    }
+
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
 
         log("generate: start (round: " + roundIndex + ")");
 
         try {
-            final Set<? extends Element> annotatedElementsSet = roundEnv.getElementsAnnotatedWith(FlashBusConfiguration.class);
-            if (annotatedElementsSet.isEmpty()) {
-                log("generate: using default package: " + eventBusPackage);
-            } else if (annotatedElementsSet.size() == 1){
-                final Element[] annotatedElements = annotatedElementsSet.toArray(new Element[] {});
-                eventBusPackage = annotatedElements[0].getAnnotation(FlashBusConfiguration.class).packageName();
-                log("generate: using custom package: " + eventBusPackage);
-            } else {
-                logError("generate: multiple (" + annotatedElementsSet.size() + "x) FlashBus configuration annotations found: using default package", /* Throwable */ null);
-            }
+//            final AndroidBuildConfig androidBuildConfig = processConfiguration(roundEnv.getElementsAnnotatedWith(FlashBusConfiguration.class));
+//            if (androidBuildConfig != null) {
+//                log("generate: build config: " + androidBuildConfig.toString());
+//            }
 
             final String subscribeAnnotationClass = Subscribe.class.getName();
             for (final TypeElement annotation : annotations) {
@@ -186,7 +210,19 @@ public class FlashBusGenerator extends AbstractProcessor {
             }
 
             if (roundIndex == 0) {
-                generateEventBusClass();
+
+                try {
+                    final SubscriberDao subscriberDao = new SubscriberDaoImpl();
+
+                    final String metaDataFilePath = subscriberDao.getMetaDataFilePath(eventBusPackage);
+                    log("generate: meta data file for project [" + eventBusPackage + "] is [" + metaDataFilePath + "]");
+
+                    subscriberDao.saveSubscribers(eventBusPackage, subscriberList);
+
+                    generateEventBusClass();
+                } catch (IOException ioe) {
+                    logError("generate: I/O error saving event bus meta data", ioe);
+                }
             }
         } catch (RuntimeException rte) {
             logError("generate: runtime error", rte);

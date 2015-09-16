@@ -18,7 +18,7 @@ package com.msagi.flashbus.generator;
 import com.msagi.flashbus.annotation.Subscribe;
 import com.msagi.flashbus.annotation.ThreadId;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.List;
 
 import javax.lang.model.element.Element;
@@ -34,22 +34,17 @@ import javax.lang.model.type.TypeMirror;
  *
  * @author msagi (miklos.sagi@gmail.com)
  */
-public class Subscriber {
+public class Subscriber implements Serializable {
 
     /**
-     * The list of event classes processed so far.
+     * Serial version UID for serialisation compatibility.
      */
-    private static final List<String> sEventClasses = new ArrayList<>();
-
-    /**
-     * The counter for unique id generator for the subscriber instances.
-     */
-    private static int sUidCounter = 0;
+    static final long serialVersionUID = 1;
 
     /**
      * The unique id of the current subscriber instance.
      */
-    private final int uid = sUidCounter++;
+    private int uid;
 
     /**
      * The class containing the subscriber method.
@@ -60,6 +55,11 @@ public class Subscriber {
      * The subscriber method.
      */
     private final String method;
+
+    /**
+     * The unique id of the event class of current subscriber instance.
+     */
+    private int eventClassId;
 
     /**
      * The class of the event in the subscriber method.
@@ -94,10 +94,6 @@ public class Subscriber {
             throw new IllegalArgumentException("eventClass == null");
         }
         this.eventClass = eventClass;
-
-        if (!sEventClasses.contains(eventClass)) {
-            sEventClasses.add(eventClass);
-        }
 
         if (threadId == null) {
             this.threadId = ThreadId.MAIN;
@@ -140,7 +136,11 @@ public class Subscriber {
     }
 
     public int getEventClassId() {
-        return getEventClassIdByEventClass(eventClass);
+        return eventClassId;
+    }
+
+    public void setEventClassId(final int eventClassId) {
+        this.eventClassId = eventClassId;
     }
 
     public String getSubscriberClass() {
@@ -163,6 +163,10 @@ public class Subscriber {
         return uid;
     }
 
+    public void setUid(final int uid) {
+        this.uid = uid;
+    }
+
     @Override
     public int hashCode() {
         return uid;
@@ -180,19 +184,5 @@ public class Subscriber {
     @Override
     public String toString() {
         return String.format("Subscriber[class: %s, method: %s, eventClass: %s, thread: %s]", subscriberClass, method, eventClass, threadId);
-    }
-
-    /**
-     * Get the event class id for the given event class.
-     *
-     * @param eventClass The event class to get the id for.
-     * @return The unique event class id.
-     */
-    public static int getEventClassIdByEventClass(final String eventClass) {
-        final int eventClassId = sEventClasses.indexOf(eventClass);
-        if (-1 == eventClassId) {
-            throw new IllegalArgumentException("Unknown event class: " + eventClass);
-        }
-        return eventClassId;
     }
 }
