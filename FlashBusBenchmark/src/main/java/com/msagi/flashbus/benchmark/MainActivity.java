@@ -1,6 +1,7 @@
 package com.msagi.flashbus.benchmark;
 
 import com.msagi.flashbus.FlashBus;
+import com.msagi.flashbus.annotation.FlashBusConfiguration;
 import com.msagi.flashbus.annotation.Subscribe;
 import com.msagi.flashbus.test.events.TestEvent;
 
@@ -10,6 +11,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+@FlashBusConfiguration(
+        debug = true,
+        connectTo = {"com.msagi.flashbus.test.FlashBus"}
+)
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -20,7 +25,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(com.msagi.flashbus.test.R.layout.activity_main);
+        FlashBus.setApplicationContext(getApplicationContext());
         mFlashBus = FlashBus.getDefault();
+        Log.i(TAG, "FlashBus instance: " + mFlashBus);
     }
 
     @Override

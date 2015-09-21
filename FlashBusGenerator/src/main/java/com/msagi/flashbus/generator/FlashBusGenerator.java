@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,6 +86,16 @@ public class FlashBusGenerator extends AbstractProcessor {
      * The list of subscribers to build the event bus for.
      */
     private final List<Subscriber> subscriberList = new ArrayList<>();
+
+    /**
+     * The list of sub event buses to connect to.
+     */
+    private String[] connectTo = {};
+
+    /**
+     * The event bus debug mode flag.
+     */
+    private boolean debugMode = false;
 
     /**
      * The event bus package (configurable with compiler parameter -Apackage='packagename')
@@ -154,9 +165,13 @@ public class FlashBusGenerator extends AbstractProcessor {
         log("init: done");
     }
 
-    private static AndroidBuildConfig processConfiguration(final Set<? extends Element> annotatedConfigurationElementSet) {
+    /**
+     * Process the configuration for FlashBus.
+     * @param annotatedConfigurationElementSet The list of configurations.
+     */
+    private void processConfiguration(final Set<? extends Element> annotatedConfigurationElementSet) {
         if (annotatedConfigurationElementSet == null || annotatedConfigurationElementSet.isEmpty()) {
-            return null;
+            return;
         }
 
         final Element[] configurationElements = annotatedConfigurationElementSet.toArray(new Element[]{});
@@ -177,8 +192,9 @@ public class FlashBusGenerator extends AbstractProcessor {
 
         final Element configurationElement = configurationElements[0];
         final FlashBusConfiguration flashBusConfiguration = configurationElement.getAnnotation(FlashBusConfiguration.class);
-        final Class buildConfigClass = flashBusConfiguration.buildConfig();
-        return AndroidBuildConfig.fromBuildConfig(buildConfigClass);
+        eventBusPackage = flashBusConfiguration.packageName();
+        debugMode = flashBusConfiguration.debug();
+        connectTo = flashBusConfiguration.connectTo();
     }
 
     @Override
@@ -187,10 +203,7 @@ public class FlashBusGenerator extends AbstractProcessor {
         log("generate: start (round: " + roundIndex + ")");
 
         try {
-//            final AndroidBuildConfig androidBuildConfig = processConfiguration(roundEnv.getElementsAnnotatedWith(FlashBusConfiguration.class));
-//            if (androidBuildConfig != null) {
-//                log("generate: build config: " + androidBuildConfig.toString());
-//            }
+            processConfiguration(roundEnv.getElementsAnnotatedWith(FlashBusConfiguration.class));
 
             final String subscribeAnnotationClass = Subscribe.class.getName();
             for (final TypeElement annotation : annotations) {
@@ -267,12 +280,14 @@ public class FlashBusGenerator extends AbstractProcessor {
      */
     private void generateEventBusClass() {
         final String eventBusClassName = eventBusPackage + "." + EVENT_BUS_CLASS;
-        log("generateEventBusClass: start (class: " + eventBusClassName + ")");
+
+        log("generateEventBusClass: start (class: " + eventBusClassName + ", debug mode: " + debugMode + ", connect to: " + Arrays.toString(connectTo) + ")");
 
         PrintWriter classWriter = null;
         JavaFileObject eventBusClass = null;
         try {
             final String eventBusCode = new FlashBusBuilder()
+                    .withDebug(debugMode)
                     .withPackage(eventBusPackage)
                     .withSubscribers(subscriberList)
                     .withTemplate(loadTemplate())

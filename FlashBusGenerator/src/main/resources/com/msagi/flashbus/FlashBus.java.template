@@ -22,6 +22,7 @@
  * limitations under the License.
  */
 {Package}
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -120,9 +121,19 @@ public class FlashBus {
     private static FlashBus sInstance;
 
     /**
+     * The application context for the bus instance.
+     */
+    private static Context sApplicationContext;
+
+    /**
      * The initial capacity of the event dispatcher lists.
      */
     private static final int EVENT_DISPATCHER_LIST_INITIAL_CAPACITY = 8;
+
+    /**
+     * The debug flag for the bus instance.
+     */
+    private static final boolean DEBUG = {Debug};
 
     /**
      * Handler for main thread.
@@ -141,11 +152,22 @@ public class FlashBus {
 
     /**
      * Create new event bus instance.
+     *
+     * @param base The base context.
      */
     public FlashBus() {
         final HandlerThread backgroundHandlerThread = new HandlerThread("backgroundHandler[flashBus:" + hashCode() + "]");
         backgroundHandlerThread.start();
         BACKGROUND_HANDLER = new Handler(backgroundHandlerThread.getLooper());
+    }
+
+    /**
+     * Set the application contect to the bus.
+     *
+     * @param context The application context.
+     */
+    public static void setApplicationContext(final Context context) {
+        sApplicationContext = context;
     }
 
     /**
@@ -155,8 +177,38 @@ public class FlashBus {
      */
     public synchronized static FlashBus getDefault() {
         if (sInstance == null) {
+            if (DEBUG) {
+                Log.d(TAG, "Initializing...");
+            }
+            if (sApplicationContext != null) {
+                final String flashBusClassName = sApplicationContext.getPackageName() + ".FlashBus";
+                try {
+                    if (DEBUG) {
+                        Log.d(TAG, "Trying to load [" + flashBusClassName + "]...");
+                    }
+                    //try to load the flash bus for the application project
+                    final Class flashBusClass = Class.forName(flashBusClassName);
+                    sInstance = (FlashBus) flashBusClass.newInstance();
+                    if (DEBUG) {
+                        Log.d(TAG, "FlashBus loaded: [" + flashBusClassName + "]");
+                    }
+                    return sInstance;
+                } catch (Exception e) {
+                    //fall back to this FlashBus as application project may be not depend on FlashBus
+                    if (DEBUG) {
+                        Log.d(TAG, "Failed to load [" + flashBusClassName + "]...");
+                    }
+                }
+            }
+
+            if (DEBUG) {
+                Log.d(TAG, "Falling back to default FlashBus [" + FlashBus.class.getName() + "]...");
+            }
+
+            //there may be a flat FlashBus architecture application
             sInstance = new FlashBus();
         }
+
         return sInstance;
     }
 

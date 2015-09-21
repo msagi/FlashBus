@@ -5,7 +5,7 @@ import com.msagi.flashbus.annotation.Subscribe;
 import com.msagi.flashbus.test.events.TestEvent;
 import com.msagi.flashbus.test.events.TestEventWithData;
 import com.msagi.flashbus.test.events.TestRuntimeExceptionEvent;
-import com.msagi.flashbus.FlashBus;
+import com.msagi.flashbus.test.FlashBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,10 @@ import java.util.List;
  * @author msagi (miklos.sagi@gmail.com)
  * @author yanislav.mihaylov (jany81@gmail.com)
  */
-@FlashBusConfiguration(packageName = "com.msagi.flashbus.test")
+@FlashBusConfiguration(
+    packageName = BuildConfig.APPLICATION_ID,
+    debug = true
+)
 public class UnitTestBridge {
 
     private final FlashBus mEventBus = new FlashBus();

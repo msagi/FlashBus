@@ -30,6 +30,8 @@ import java.util.List;
 public class FlashBusBuilder {
 
     //makers in the template class which will be replaced by the generated code
+    private static final String MARKER_DEBUG = "{Debug}";
+
     private static final String MARKER_PACKAGE = "{Package}";
 
     private static final String MARKER_IMPORTS = "{Imports}";
@@ -57,11 +59,15 @@ public class FlashBusBuilder {
      */
     private List<String> eventClasses;
 
-
     /**
      * The package name of the generated event bus class.
      */
     private String packageName;
+
+    /**
+     * The debug flag of the generated event bus.
+     */
+    private Boolean debug = false;
 
     /**
      * The list of subscribers to build the event bus for.
@@ -72,6 +78,16 @@ public class FlashBusBuilder {
      * The template to use as a basis of the generated event bus class.
      */
     private String template;
+
+    /**
+     * Set event bus debug flag.
+     * @param debug The debug flag to build the event bus with.
+     * @return The builder instance to support chaining.
+     */
+    public FlashBusBuilder withDebug(final boolean debug) {
+        this.debug = debug;
+        return this;
+    }
 
     /**
      * Set event bus package name.
@@ -395,6 +411,7 @@ public class FlashBusBuilder {
         generateEventClassRelatedCode();
 
         return template
+                .replace(MARKER_DEBUG, debug.toString())
                 .replace(MARKER_PACKAGE, codeBuilderForPackage)
                 .replace(MARKER_IMPORTS, codeBuilderForSubscriberClassImports.toString() + "\n" + codeBuilderForEventClassImports.toString())
                 .replace(MARKER_INNER_CLASSES, codeBuilderForInnerClasses.toString())

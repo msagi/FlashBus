@@ -37,8 +37,16 @@ public @interface FlashBusConfiguration {
     String packageName() default "com.msagi.flashbus";
 
     /**
-     * The Android BuildConfig.class
-     * @return The BuildConfig.class or null if not set.
+     * Flag if FlashBus is to be generated in debug mode.
+     *
+     * @return The debug mode flag or false if not set.
      */
-    Class<?> buildConfig() default Void.class;
+    boolean debug() default false;
+
+    /**
+     * List of sub-FlashBus class names to connect this FlashBus to.
+     *
+     * @return The list of fully qualified class names of sub-FlashBuses to connect to.
+     */
+    String[] connectTo() default {};
 }
