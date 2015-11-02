@@ -21,8 +21,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.msagi.flashbus;
-
+{Package}
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -34,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-{SubscribeImports}
+{Imports}
 /**
  * Custom generated event bus of FlashBus.
  *
@@ -42,10 +41,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Annotations in anonymous classes are invisible to annotation processing that is why this event bus does not support event handlers in anonymous classes.
  *
  * @author msagi (miklos.sagi@gmail.com)
- * @see com.msagi.eventbus.annotation.AnnotationProcessor
- * @see com.msagi.eventbus.annotation.Subscribe
+ * @see com.msagi.flashbus.annotation.AnnotationProcessor
+ * @see com.msagi.flashbus.annotation.Subscribe
  */
-public class EventBus {
+public class FlashBus {
 
     /**
      * Generic dispatcher base class. Implements runnable to be able to post it to a Handler.
@@ -113,12 +112,12 @@ public class EventBus {
     /**
      * Tag for logging.
      */
-    private static final String TAG = EventBus.class.getSimpleName();
+    private static final String TAG = FlashBus.class.getSimpleName();
 
     /**
      * The default (singleton) event bus instance.
      */
-    private static EventBus sInstance;
+    private static FlashBus sInstance;
 
     /**
      * The initial capacity of the event dispatcher lists.
@@ -143,8 +142,8 @@ public class EventBus {
     /**
      * Create new event bus instance.
      */
-    public EventBus() {
-        final HandlerThread backgroundHandlerThread = new HandlerThread("backgroundHandler[eventBus:" + hashCode() + "]");
+    public FlashBus() {
+        final HandlerThread backgroundHandlerThread = new HandlerThread("backgroundHandler[flashBus:" + hashCode() + "]");
         backgroundHandlerThread.start();
         BACKGROUND_HANDLER = new Handler(backgroundHandlerThread.getLooper());
     }
@@ -154,9 +153,9 @@ public class EventBus {
      *
      * @return The default event bus instance.
      */
-    public synchronized static EventBus getDefault() {
+    public synchronized static FlashBus getDefault() {
         if (sInstance == null) {
-            sInstance = new EventBus();
+            sInstance = new FlashBus();
         }
         return sInstance;
     }
@@ -225,7 +224,7 @@ public class EventBus {
     //
     // Custom generated code
     //
-{SubscribeInnerClasses}
-{SubscribeFields}
-{SubscribeMethods}
+{InnerClasses}
+{Fields}
+{Methods}
 }

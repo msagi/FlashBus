@@ -1,6 +1,6 @@
 package com.msagi.flashbus.benchmark;
 
-import com.msagi.flashbus.EventBus;
+import com.msagi.flashbus.FlashBus;
 import com.msagi.flashbus.annotation.Subscribe;
 
 import android.os.Bundle;
@@ -16,7 +16,6 @@ public class Experiment {
     }
 
     public void doSomething() {
-        EventBus.getDefault().register(this);
-
+        FlashBus.getDefault().register(this);
     }
 }

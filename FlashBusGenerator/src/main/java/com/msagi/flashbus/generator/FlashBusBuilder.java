@@ -23,34 +23,39 @@ import java.util.Hashtable;
 import java.util.List;
 
 /**
- * Builder for the custom generated event bus class.
+ * Builder for the custom generated FlashBus event bus class.
  *
  * @author msagi (miklos.sagi@gmail.com)
  */
-public class EventBusBuilder {
+public class FlashBusBuilder {
 
     //makers in the template class which will be replaced by the generated code
-    private static final String MARKER_SUBSCRIBE_IMPORTS = "\\{SubscribeImports\\}";
+    private static final String MARKER_PACKAGE = "{Package}";
 
-    private static final String MARKER_SUBSCRIBE_INNER_CLASSES = "\\{SubscribeInnerClasses\\}";
+    private static final String MARKER_IMPORTS = "{Imports}";
 
-    private static final String MARKER_SUBSCRIBE_FIELDS = "\\{SubscribeFields\\}";
+    private static final String MARKER_INNER_CLASSES = "{InnerClasses}";
 
-    private static final String MARKER_METHODS = "\\{SubscribeMethods\\}";
+    private static final String MARKER_FIELDS = "{Fields}";
+
+    private static final String MARKER_METHODS = "{Methods}";
 
     private StringBuilder logBuilder;
 
+    private StringBuilder codeBuilderForPackage;
     private StringBuilder codeBuilderForSubscriberClassImports;
     private StringBuilder codeBuilderForEventClassImports;
-
     private StringBuilder codeBuilderForInnerClasses;
-
     private StringBuilder codeBuilderForFields;
     private StringBuilder codeBuilderForMethods;
 
     private Hashtable<String, ArrayList<Subscriber>> subscribersBySubscriberClass;
     private Hashtable<String, ArrayList<Subscriber>> subscribersByEventClass;
 
+    /**
+     * The package name of the generated event bus class.
+     */
+    private String packageName;
 
     /**
      * The list of subscribers to build the event bus for.
@@ -63,12 +68,22 @@ public class EventBusBuilder {
     private String template;
 
     /**
+     * Set event bus package name.
+     * @param packageName The package name to use as event bus package.
+     * @return The builder instance to support chaining.
+     */
+    public FlashBusBuilder withPackage(final String packageName) {
+        this.packageName = packageName;
+        return this;
+    }
+
+    /**
      * Set given subscriber list in the state of the builder.
      *
      * @param subscriberList The list of subscribers to generate code to.
      * @return The builder instance to support chaining.
      */
-    public EventBusBuilder withSubscribers(final List<Subscriber> subscriberList) {
+    public FlashBusBuilder withSubscribers(final List<Subscriber> subscriberList) {
         if (subscriberList == null) {
             throw new IllegalArgumentException("subscriberList == null");
         }
@@ -82,7 +97,7 @@ public class EventBusBuilder {
      * @param template The template class content.
      * @return The builder instance to support chaining.
      */
-    public EventBusBuilder withTemplate(final String template) {
+    public FlashBusBuilder withTemplate(final String template) {
         if (template == null) {
             throw new IllegalArgumentException("template == null");
         }
@@ -342,6 +357,11 @@ public class EventBusBuilder {
 
         logBuilder = new StringBuilder();
 
+        codeBuilderForPackage = new StringBuilder();
+        if (packageName != null) {
+            codeBuilderForPackage.append("package ").append(packageName).append(";\n");
+        }
+
         codeBuilderForSubscriberClassImports = new StringBuilder();
         codeBuilderForEventClassImports = new StringBuilder();
         codeBuilderForInnerClasses = new StringBuilder();
@@ -359,10 +379,11 @@ public class EventBusBuilder {
         generateEventClassRelatedCode();
 
         return template
-                .replaceAll(MARKER_SUBSCRIBE_IMPORTS, codeBuilderForSubscriberClassImports.toString() + "\n" + codeBuilderForEventClassImports.toString())
-                .replaceAll(MARKER_SUBSCRIBE_INNER_CLASSES, codeBuilderForInnerClasses.toString())
-                .replaceAll(MARKER_SUBSCRIBE_FIELDS, codeBuilderForFields.toString())
-                .replaceAll(MARKER_METHODS, codeBuilderForMethods.toString())
+                .replace(MARKER_PACKAGE, codeBuilderForPackage)
+                .replace(MARKER_IMPORTS, codeBuilderForSubscriberClassImports.toString() + "\n" + codeBuilderForEventClassImports.toString())
+                .replace(MARKER_INNER_CLASSES, codeBuilderForInnerClasses.toString())
+                .replace(MARKER_FIELDS, codeBuilderForFields.toString())
+                .replace(MARKER_METHODS, codeBuilderForMethods.toString())
                 .concat("\n\n/*\n" + logBuilder.toString() + "*/");
     }
 }
