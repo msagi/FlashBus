@@ -1,3 +1,5 @@
+![FlashBus logo](FlashBus-logo-v1.png)
+
 #FlashBus
 The **fastest Android Event Bus on Earth**. No boilerplate code required as the event bus is custom generated in compile time. This makes it significantly faster than any
 other generic event bus implementation.
@@ -30,15 +32,15 @@ FlashBus is available on Maven Central and JCenter. Add the following Gradle dep
 **Always use the last version** of FlashBus (check for the last version [here](CHANGELOG.md)).
 
 ```groovy
-    compile 'com.msagi:flashbus:1.1.0'
+    compile 'com.msagi:flashbus:1.1.1'
 ```
 
 so in case of a generic Android application, the 'dependency' section of the 'build.gradle' file which uses FlashBus looks something like this
 ```groovy
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:22.2.1'
-    compile 'com.msagi:flashbus:1.1.0'
+    compile 'com.android.support:appcompat-v7:23.1.0'
+    compile 'com.msagi:flashbus:1.1.1'
 }
 ```
 
@@ -64,13 +66,13 @@ so in case of a generic Android application, the build.gradle file with FlashBus
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
 
     defaultConfig {
         applicationId "com.msagi.myapplication"
         minSdkVersion 14
-        targetSdkVersion 22
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
@@ -84,8 +86,8 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:22.2.1'
-    compile 'com.msagi:flashbus:1.1.0'
+    compile 'com.android.support:appcompat-v7:23.1.0'
+    compile 'com.msagi:flashbus:1.1.1'
 }
 
 File flashBusOutputDir = new File("build/generated/source/flashbus")
