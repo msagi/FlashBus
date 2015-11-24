@@ -6,7 +6,7 @@ targetCompatibility = JavaVersion.VERSION_1_7
 ext {
     PUBLISH_GROUP_ID = 'com.msagi'
     PUBLISH_ARTIFACT_ID = 'flashbus'
-    PUBLISH_VERSION = '1.1.1'
+    PUBLISH_VERSION = '1.1.2'
 }
 
 dependencies {

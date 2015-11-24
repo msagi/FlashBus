@@ -1,6 +1,7 @@
 package com.msagi.flashbus.test;
 
 import com.msagi.flashbus.test.events.TestEvent;
+import com.msagi.flashbus.test.events.TestEventForIssue7;
 import com.msagi.flashbus.test.events.TestEventWithData;
 import com.msagi.flashbus.test.events.TestRuntimeExceptionEvent;
 
@@ -44,7 +45,7 @@ public class FlashBusTest {
 
     @Test
     public void registrationWithNull() {
-        mEventBus.register((Object)null);
+        mEventBus.register((Object) null);
     }
 
     @Test
@@ -54,7 +55,7 @@ public class FlashBusTest {
 
     @Test
     public void unregisterWithNullEventHandler() {
-        mEventBus.unregister((Object)null);
+        mEventBus.unregister((Object) null);
     }
 
     @Test
@@ -196,6 +197,17 @@ public class FlashBusTest {
         runTasks();
         assertEquals(0, mUnitTestBridge.getReceivedTestEventsOnMainThreadListSize());
         assertEquals(0, mUnitTestBridge.getReceivedTestEventsWithDataOnMainThreadListSize());
+
+        mUnitTestBridge.unregister();
+    }
+
+    @Test
+    public void testIssue7() {
+        mUnitTestBridge.register();
+        mEventBus.post(new TestEventForIssue7());
+        runTasks();
+        //there are 2 subscriber methods in the same class for the same event so the event should be delivered on both
+        assertEquals(2, mUnitTestBridge.getReceivedTestEventsForIssue7());
 
         mUnitTestBridge.unregister();
     }
