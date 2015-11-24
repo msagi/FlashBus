@@ -1,6 +1,6 @@
 package com.msagi.flashbus.benchmark;
 
-import com.msagi.flashbus.FlashBus;
+import com.msagi.flashbus.benchmark.FlashBus;
 import com.msagi.flashbus.annotation.Subscribe;
 
 import android.os.Bundle;
