@@ -19,6 +19,7 @@ import com.msagi.flashbus.annotation.ThreadId;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -236,20 +237,28 @@ public class FlashBusBuilder {
                     .append("\t\tif (!").append(registeredSubscriberListName).append(".contains(subscriber)) { return; }\n")
                     .append("\t\t").append(registeredSubscriberListName).append(".remove(subscriber);\n");
 
+            final HashSet<String> cleanDispatcherLists = new HashSet<>();
             for (final Subscriber subscriber : subscribers) {
 
                 final int eventClassId = subscriber.getEventClassId();
                 final String dispatcherListName = "mDispatcherList" + eventClassId;
                 final String dispatcherListIteratorName = "dispatcherList" + eventClassId + "Iterator";
 
-                codeBuilderForMethods
-                        .append("\t\tfinal Iterator<Dispatcher> ").append(dispatcherListIteratorName).append(" = ").append(dispatcherListName).append(".iterator();\n")
-                        .append("\t\twhile (").append(dispatcherListIteratorName).append(".hasNext()) {\n")
-                        .append("\t\t\tif (").append(dispatcherListIteratorName).append(".next().mSubscriber == subscriber) {\n")
-                        .append("\t\t\t\t").append(dispatcherListIteratorName).append(".remove();\n")
-                        //no 'break;' here since a subscriber can listen to the same event multiple times
-                        .append("\t\t\t}\n")
-                        .append("\t\t}\n");
+                //if there are more dispatchers for the same event then these will go to the same dispatcher list and
+                //they all will be cleared in one while loop
+                if (!cleanDispatcherLists.contains(dispatcherListName)) {
+                    codeBuilderForMethods
+                            .append("\t\tfinal Iterator<Dispatcher> ").append(dispatcherListIteratorName).append(" = ").append(dispatcherListName)
+                            .append(".iterator();\n")
+                            .append("\t\twhile (").append(dispatcherListIteratorName).append(".hasNext()) {\n")
+                            .append("\t\t\tif (").append(dispatcherListIteratorName).append(".next().mSubscriber == subscriber) {\n")
+                            .append("\t\t\t\t").append(dispatcherListIteratorName).append(".remove();\n")
+                            //no 'break;' here since a subscriber can listen to the same event multiple times
+                            .append("\t\t\t}\n")
+                            .append("\t\t}\n");
+
+                    cleanDispatcherLists.add(dispatcherListName);
+                }
 
             }
 
